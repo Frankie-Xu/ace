@@ -2,6 +2,13 @@
 
 This guide provides detailed instructions for adding new tasks to the ACE framework.
 
+Set `enforce_playbook_token_budget=true` to opt into a hard playbook-only budget
+at the curation boundary. Counts use the existing `count_tokens` (`cl100k_base`)
+function. The default is `false` for compatibility; an over-budget candidate is
+returned unchanged, its new bullet IDs are not consumed, and diagnostics include
+`base_tokens`, `candidate_tokens`, `budget_tokens`, `status`, and `reason`. The
+candidate is rejected rather than silently truncating bullet text.
+
 ## 📁 Repository Structure
 
 Understanding the codebase structure will help you navigate and extend ACE effectively:

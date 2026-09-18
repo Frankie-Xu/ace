@@ -11,7 +11,7 @@ from ..prompts.curator import (
     CURATOR_PROMPT,
     CURATOR_PROMPT_NO_GT,
 )
-from playbook_utils import extract_json_from_text, apply_curator_operations
+from playbook_utils import apply_curator_operations_with_budget, extract_json_from_text
 from logger import log_curator_operation_diff, log_curator_failure
 from llm import timed_llm_call
 
@@ -49,7 +49,8 @@ class Curator:
         use_json_mode: bool = False,
         call_id: str = "curate",
         log_dir: Optional[str] = None,
-        next_global_id: int = 1
+        next_global_id: int = 1,
+        enforce_playbook_budget: bool = False
     ) -> Tuple[str, int, List[Dict[str, Any]], Dict[str, Any]]:
         """
         Curate the playbook based on reflection feedback.
@@ -131,9 +132,20 @@ class Curator:
                     print(f"Warning: Failed to log curator operation diff: {e}")
             
             # Apply operations to playbook
-            updated_playbook, next_global_id = apply_curator_operations(
-                current_playbook, operations, next_global_id
+            updated_playbook, next_global_id, budget_decision = apply_curator_operations_with_budget(
+                current_playbook, operations, next_global_id, token_budget,
+                enforce=enforce_playbook_budget,
             )
+            if enforce_playbook_budget:
+                call_info = dict(call_info or {})
+                call_info["playbook_budget"] = budget_decision
+                if budget_decision["status"] == "rejected":
+                    operations = []
+                    print(
+                        "⏭️  Skipping curator update: candidate exceeds "
+                        f"playbook budget ({budget_decision['candidate_tokens']} > "
+                        f"{budget_decision['budget_tokens']} tokens)"
+                    )
             
             # Log operations
             for op in operations:
