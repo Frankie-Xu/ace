@@ -104,6 +104,10 @@ budget token counts. Continued batch failures also include a rollback decision.
 
 ## Offline validation
 
+The small import environment requires `openai`, `tiktoken`, `python-dotenv` and
+`numpy`; optional embedding packages are not exercised. Install dependencies and
+cache the `cl100k_base` tokenizer before running without network access.
+
 ```bash
 python -m unittest discover -s tests -v
 python -m compileall -q ace playbook_lifecycle.py eval tests
