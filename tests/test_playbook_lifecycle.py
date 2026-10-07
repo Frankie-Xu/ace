@@ -131,6 +131,15 @@ class LifecycleTest(unittest.TestCase):
             with self.subTest(budget=budget):
                 self.assertEqual(publish_playbook_candidate(candidate, BASE, 8, budget, True)[:2], (BASE, 8))
 
+    def test_literal_token_markers_survive_update_and_exact_budget_publication(self):
+        for marker in ('<|endoftext|>', '<|fim_prefix|>'):
+            with self.subTest(marker=marker):
+                candidate = prepare_playbook_candidate(BASE, [dict(UPDATE, content='Treat ' + marker + ' as literal text.')], 8)
+                size = count_tokens(candidate.playbook)
+                result = publish_playbook_candidate(candidate, BASE, 8, size, enforce=True)
+                self.assertEqual(result[:2], (candidate.playbook, 8))
+                self.assertEqual(result[2]['status'], 'accepted')
+
     def test_empty_candidate_preserves_bytes_and_validates_budget(self):
         candidate = prepare_playbook_candidate(BASE, [], 8)
         self.assertEqual(candidate.playbook, BASE)
