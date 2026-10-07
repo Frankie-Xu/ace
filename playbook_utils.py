@@ -219,7 +219,12 @@ def apply_curator_operations(playbook_text, operations, next_id):
 def apply_curator_operations_with_budget(
     playbook_text, operations, next_id, token_budget, enforce=False
 ):
-    """Apply operations with an optional playbook-only token budget."""
+    """Apply ADD operations with an optional playbook-only token budget."""
+    if enforce and (
+        isinstance(token_budget, bool) or not isinstance(token_budget, int) or token_budget < 0
+    ):
+        raise ValueError("token_budget must be a non-negative integer")
+    operations = [op for op in operations if op["type"] == "ADD"]
     if not operations:
         base_tokens = count_tokens(playbook_text)
         return playbook_text, next_id, {
@@ -245,8 +250,6 @@ def apply_curator_operations_with_budget(
     }
     if not enforce:
         return candidate, candidate_next_id, decision
-    if isinstance(token_budget, bool) or not isinstance(token_budget, int) or token_budget < 0:
-        raise ValueError("token_budget must be a non-negative integer")
     if candidate_tokens > token_budget:
         decision.update(status="rejected", reason="candidate_exceeds_budget")
         return playbook_text, next_id, decision

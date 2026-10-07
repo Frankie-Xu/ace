@@ -8,6 +8,15 @@ function. The default is `false` for compatibility; an over-budget candidate is
 returned unchanged, its new bullet IDs are not consumed, and diagnostics include
 `base_tokens`, `candidate_tokens`, `budget_tokens`, `status`, and `reason`. The
 candidate is rejected rather than silently truncating bullet text.
+Literal tokenizer markers in prompt or playbook content are counted as ordinary
+text, so strings such as `<|endoftext|>` do not interrupt token counting.
+
+Curator responses must contain a string `reasoning` and list `operations`.
+Each operation's `type` must be a string, and ADD `section` and `content` must
+also be strings. A malformed operation rejects the complete response before
+applying any additions. Unsupported-only operation lists preserve the exact
+playbook text and next ID. An enforced budget must be a non-negative integer,
+including when there are no executable operations.
 
 ## 📁 Repository Structure
 

@@ -373,8 +373,8 @@ class Curator:
         operations_info = extract_json_from_text(response, "operations")
         
         # Validate JSON structure is correct
-        if not operations_info:
-            raise ValueError("Failed to extract valid JSON from curator response")
+        if not isinstance(operations_info, dict):
+            raise ValueError("Curator response must be a JSON object")
         
         # Validate required fields
         if "reasoning" not in operations_info:
@@ -399,6 +399,8 @@ class Curator:
                 raise ValueError(f"Operation {i} missing required 'type' field")
             
             op_type = op["type"]
+            if not isinstance(op_type, str):
+                raise ValueError(f"Operation {i} type must be a string")
             
             # Currently only ADD operations are fully supported
             # Note: You can add support for UPDATE, MERGE, DELETE operations here
@@ -411,5 +413,8 @@ class Curator:
                 missing_fields = required_fields - set(op.keys())
                 if missing_fields:
                     raise ValueError(f"ADD operation {i} missing fields: {list(missing_fields)}")
+                for field in ("section", "content"):
+                    if not isinstance(op[field], str):
+                        raise ValueError(f"ADD operation {i} {field} must be a string")
         
         return operations_info
