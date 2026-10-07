@@ -366,3 +366,5 @@ If you use ACE in your research, please cite our paper:
 Made with ❤️ by the ACE team
 
 </div>
+
+Optional [playbook lifecycle transactions](tutorials/playbook_lifecycle.md) provide validated UPDATE, MERGE and DELETE operations behind `enable_playbook_lifecycle` (default `false`).
