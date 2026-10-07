@@ -337,6 +337,23 @@ class TrainingLifecycleTest(unittest.TestCase):
         self.assertEqual(output[2]['playbook_lifecycle']['rollback']['status'], 'rolled_back')
         self.assertFalse(output[2]['post_train_result']['is_correct'])
 
+    def test_batch_continued_failure_stale_rollback_preserves_newer_state(self):
+        model = self.models[1]
+        newer = BASE + '# External newer state\n'
+        def generate(**kwargs):
+            if kwargs['call_id'].endswith('post_curate'):
+                model.playbook, model.next_global_id = newer, 20
+                raise RuntimeError('synthetic model failure after newer state')
+            return '{"final_answer": "ok"}', [], {}
+        model.generator.generate.side_effect = generate
+        response = json.dumps({'reasoning': 'synthetic', 'operations': [UPDATE, ADD]})
+        with patch('ace.core.curator.timed_llm_call', return_value=(response, {})):
+            output = self.train(model, continue_on_llm_error=True)
+        self.assertEqual((model.playbook, model.next_global_id), (newer, 20))
+        self.assertEqual(output[2]['playbook_lifecycle']['rollback'],
+                         {'status': 'rejected', 'reason': 'stale_candidate'})
+        self.assertEqual(output[2]['post_train_result']['playbook_num_tokens'], count_tokens(newer))
+
     def test_batch_reducer_rejection_reports_conflict_and_keeps_base(self):
         model = self.models[1]
         response = lambda ops: json.dumps({'reasoning': 'synthetic', 'operations': ops})

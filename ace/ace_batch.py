@@ -1028,7 +1028,7 @@ class ACEBatch:
                 except Exception as e:
                     if is_api_error(e) or config_params.get('continue_on_llm_error', False):
                         print(f"  API ERROR in post-curate sample {idx + 1}: {e} - "
-                              f"marking as incorrect, rolling back playbook, continuing")
+                              f"marking as incorrect, continuing")
                         post_curate_results[idx] = (INCORRECT_DUE_TO_API_ERROR, False)
                         phase3_api_error_occurred = True
                     else:
@@ -1049,10 +1049,11 @@ class ACEBatch:
                     published_candidate, self.playbook, self.next_global_id,
                 )
                 budget_decision = dict(budget_decision or {}, rollback=rollback_decision)
+                print(f"  Playbook rollback: {rollback_decision['status']} ({rollback_decision['reason']})")
             else:
                 self.playbook = playbook_before_phase2
                 self.next_global_id = next_global_id_before_phase2
-            print(f"  Playbook and next_global_id rolled back to pre-Phase2 state due to API error(s)")
+                print("  Playbook and next_global_id rolled back to pre-Phase2 state due to API error(s)")
         
         print(f"Phase 3 complete: All {len(batch)} post-curate generations done")
         
